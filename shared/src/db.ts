@@ -21,7 +21,8 @@ const Room=new schema({
             userid:objectId,
             message:String
         }
-    ]
+    ],
+    editorState:{type:Object,default:{}}
 })
 
 const UserModel=mongoose.model('User',User);
