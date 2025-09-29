@@ -3,6 +3,7 @@ import signuprouter from "./Routes/signup.js"
 import loginrouter from "./Routes/login.js"
 import roomrouter from "./Routes/Room.js"
 import GetRoomsrouter from "./Routes/GetRooms.js"
+import GetEditorrouter from "./Routes/GetEditor.js"
 const app=express()
 import mongoose from "mongoose"
 import cors from "cors"
@@ -18,4 +19,5 @@ app.use("/auth",signuprouter);
 app.use("/auth",loginrouter);
 app.use("/",roomrouter);
 app.use("/",GetRoomsrouter);
+app.use("/",GetEditorrouter);
 app.listen(3000);
