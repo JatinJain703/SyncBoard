@@ -56,7 +56,7 @@ const VideoChat: React.FC<VideoChatProps> = ({ roomId, currentUserId, members })
     <div className="w-full max-w-xl bg-gray-900 bg-opacity-90 rounded-lg overflow-hidden shadow-2xl">
       <LiveKitRoom
         token={token}
-        serverUrl="ws://localhost:7880"
+        serverUrl="wss://syncboard-4ih1dz8g.livekit.cloud"
         video={true}
         audio={true}
         className="w-full"
