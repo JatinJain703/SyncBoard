@@ -1,11 +1,12 @@
 import express from "express";
 import { AccessToken } from "livekit-server-sdk";
 import { string } from "zod";
-
+const LiveKitapiKey=process.env.LivekitApiKey!;
+const LiveKitsecret=process.env.LiveKitSecret!;
 const router = express.Router();
 
-const apiKey = "devkey";
-const apiSecret = "secret";
+const apiKey = LiveKitapiKey;
+const apiSecret = LiveKitsecret;
 
 router.get("/", async (req, res) => {
   const { room, currentUserId} = req.query;
