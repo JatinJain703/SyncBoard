@@ -1,6 +1,6 @@
 import type { ObjectId } from "mongoose";
 import WebSocket from "ws";
-import { CHAT, JOIN_ROOM, LEAVE_ROOM } from "./messages.js";
+import { CHAT, JOIN_ROOM, LEAVE_ROOM, SNAPSHOT, PATCH} from "./messages.js";
 import { RoomModel } from "../../shared/dist/db.js";
 interface User {
     socket: WebSocket,
@@ -27,7 +27,7 @@ export class RoomManager {
                 const Room = await RoomModel.findById(message.Roomid);
                 if (Room) {
                     user.Room = message.Roomid;
-                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "");
+                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "",user.userid,"new-user");
                 }
 
                 else {
@@ -38,12 +38,12 @@ export class RoomManager {
             }
             if (message.type === LEAVE_ROOM) {
                 const user = this.Users.find(u => u.socket === socket);
-               
-                if (!user) { return;}
+
+                if (!user) { return; }
                 this.removeUser(socket);
                 const Room = await RoomModel.findById(message.Roomid);
                 if (Room) {
-                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "");
+                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "",user.userid,"user-left");
                 }
                 else {
                     user.socket.send(JSON.stringify({ message: "Room does not exist" }))
@@ -88,24 +88,95 @@ export class RoomManager {
                     }))
                 }
             }
+            if (message.type === SNAPSHOT) {
+                const user = this.Users.find(u => u.socket === socket);
+                if (!user) {
+                    return;
+                }
+                if (user.Room !== message.Roomid) {
+                    socket.send(JSON.stringify({
+                        type: "ERROR",
+                        message: "You are not part of this room"
+                    }));
+                    return;
+                }
+                try {
+                    const Room = await RoomModel.findById(message.Roomid);
+                    if (!Room) {
+                        return;
+                    }
+                    let snapshot = message.snapshot;
+
+                    if (typeof snapshot === "string") {
+                        try {
+                            snapshot = JSON.parse(snapshot);
+                        } catch (err) {
+                            console.error("Invalid snapshot string:", err);
+                            return; // skip saving
+                        }
+                    }
+
+                    if (snapshot && typeof snapshot === "object") {
+                        Room.editorState = snapshot;
+                        await Room.save();
+                    }
+
+                } catch (err) {
+                    console.error("Error saving snapshot:", err);
+                }
+            }
+            if (message.type === PATCH) {
+                const user = this.Users.find(u => u.socket === socket);
+                if (!user) {
+                    return;
+                }
+                if (user.Room !== message.Roomid) {
+                    socket.send(JSON.stringify({
+                        type: "ERROR",
+                        message: "You are not part of this room"
+                    }));
+                    return;
+                }
+                this.Users.forEach(u => {
+                    if (u.Room === message.Roomid && u.socket !== socket) {
+                        u.socket.send(JSON.stringify({
+                            type: "PATCH",
+                            from: user.userid,
+                            patches: Array.isArray(message.patches) ? message.patches : [message.patches]
+                        }));
+                    }
+                });
+            }
         })
     }
-    private broadcastMembers(roomId: string, hostId: String) {
+    private broadcastMembers(roomId: string, hostId: String,userId:ObjectId,msg:string) {
         const members = this.Users
             .filter(u => u.Room === roomId)
             .map(u => ({
-                userid: u.userid,
-                username: u.username
+                userid: u.userid.toString(),
+                username:u.username
             }));
-        console.log(members);
+            const usersocket=this.Users.find(u=>u.userid===userId)?.socket;
         this.Users.forEach(u => {
             if (u.Room === roomId) {
+                
+                 const personalizedMembers = members.map(m => ({
+                ...m,
+                username: m.userid === u.userid.toString() ? "You" : m.username
+            }));
                 u.socket.send(JSON.stringify({
                     type: "MEMBERS",
                     Roomid: roomId,
                     host: hostId,
-                    members: members
-                }));
+                    members: personalizedMembers
+                })); 
+                if(u.socket!==usersocket)
+                {
+                  u.socket.send(JSON.stringify({
+                    type:msg,
+                    userId:userId.toString()
+                  }))
+                }
             }
         });
     }
