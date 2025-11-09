@@ -1,7 +1,7 @@
 import express from "express"
 const router = express.Router();
 import { auth } from "../middlewares/auth.js";
-import { RoomModel, UserModel } from "../../../shared/dist/db.js";
+import { RoomModel, UserModel } from "../db.js";
 
 router.post("/CreateRoom", auth, async (req, res) => {
     const userid = req.user?.id;

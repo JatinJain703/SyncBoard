@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { UserModel } from "../../../shared/dist/db.js";
+import { UserModel } from "../db.js";
 import z from "zod";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";

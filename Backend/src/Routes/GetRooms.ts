@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { UserModel } from "../../../shared/dist/db.js";
+import { UserModel } from "../db.js";
 import { auth } from "../middlewares/auth.js";
 import type { ObjectId } from "mongoose";
 

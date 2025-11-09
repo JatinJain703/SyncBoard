@@ -1,6 +1,6 @@
 import express from "express";
 const router=express.Router();
-import { RoomModel } from "../../../shared/dist/db.js";
+import { RoomModel } from "../db.js";
 import { auth } from "../middlewares/auth.js";
 
 router.post("/GetEditor",auth,async(req,res)=>{
