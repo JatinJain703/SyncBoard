@@ -6,7 +6,7 @@ import { RoomManager } from "./RoomManager.js";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET!;
 import mongoose from "mongoose";
-import { UserModel } from "../../shared/dist/db.js";
+import { UserModel } from "./db.js";
 const mongourl = process.env.mongourl!;
 mongoose.connect(mongourl);
 

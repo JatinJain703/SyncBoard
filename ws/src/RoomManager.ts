@@ -1,7 +1,7 @@
 import type { ObjectId } from "mongoose";
 import WebSocket from "ws";
 import { CHAT, JOIN_ROOM, LEAVE_ROOM, SNAPSHOT, PATCH} from "./messages.js";
-import { RoomModel } from "../../shared/dist/db.js";
+import { RoomModel } from "./db.js";
 interface User {
     socket: WebSocket,
     userid: ObjectId,
