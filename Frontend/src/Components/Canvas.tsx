@@ -37,7 +37,7 @@ export function Canvas() {
       return;
     }
 
-    const ws = new WebSocket(`ws://localhost:8080?token=${token}`);
+    const ws = new WebSocket(`https://syncboard-ws.onrender.com?token=${token}`);
     setsocket(ws);
 
     ws.onopen = () => {

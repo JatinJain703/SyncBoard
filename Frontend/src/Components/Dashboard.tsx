@@ -13,7 +13,7 @@ export function Dashboard() {
 
   async function fetchData() {
     try {
-      const response = await axios.get("http://localhost:3000/GetRooms", {
+      const response = await axios.get("https://syncboard-66a9.onrender.com/GetRooms", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -27,7 +27,7 @@ export function Dashboard() {
   async function create(name: string) {
     try {
       const response = await axios.post(
-        "http://localhost:3000/CreateRoom",
+        "https://syncboard-66a9.onrender.com/CreateRoom",
         { name },
         {
           headers: {

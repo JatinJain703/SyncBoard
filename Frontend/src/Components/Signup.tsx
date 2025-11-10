@@ -35,7 +35,7 @@ export function Signup() {
 
 
     try {
-      const response = await axios.post("http://localhost:3000/auth/signup", {
+      const response = await axios.post("https://syncboard-66a9.onrender.com/auth/signup", {
         name,
         email,
         password

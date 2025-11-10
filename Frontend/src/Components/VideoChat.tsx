@@ -30,7 +30,7 @@ const VideoChat: React.FC<VideoChatProps> = ({ roomId, currentUserId, members })
   useEffect(() => {
     const joinRoom = async () => {
       try {
-        const resp = await axios.get("http://localhost:3000/token", {
+        const resp = await axios.get("https://syncboard-66a9.onrender.com/token", {
           params: { room: roomId, currentUserId },
         });
         setToken(resp.data.token);
