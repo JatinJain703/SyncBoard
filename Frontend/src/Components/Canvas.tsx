@@ -16,7 +16,7 @@ interface member {
 export function Canvas() {
   const navigate = useNavigate();
   const { Roomname, Roomid } = useParams();
-  const [Host, setHost] = useState(null);
+  const [_Host, setHost] = useState(null);
   const [Members, setMembers] = useState<member[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [socket, setsocket] = useState<WebSocket | null>(null);

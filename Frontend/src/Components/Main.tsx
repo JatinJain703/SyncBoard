@@ -8,12 +8,12 @@ export default function Main() {
 
     const handleSignup=()=>
     {
-      setsignup(c=>c=true);
+      setsignup(true);
       navigate("/SignupLogin")
     }
      const handleLogin=()=>
     {
-      setsignup(c=>c=false);
+      setsignup(false);
       navigate("/SignupLogin")
     }
   return (

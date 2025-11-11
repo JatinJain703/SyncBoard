@@ -1,5 +1,3 @@
-import type React from "react"
-
 import { track, GeoShapeGeoStyle, type Editor } from "@tldraw/tldraw"
 import { useEffect, useRef } from "react"
 import {
@@ -14,11 +12,12 @@ import {
   Type,
   StickyNote,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 interface ToolbarItem {
   id: string
   label: string
-  icon: React.ComponentType<{ size: number }>
+  icon: LucideIcon
   shape?: string
 }
 
