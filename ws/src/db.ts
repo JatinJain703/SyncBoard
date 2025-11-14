@@ -19,6 +19,7 @@ const Room=new schema({
     chat:[
         {
             userid:objectId,
+            username:String,
             message:String
         }
     ],

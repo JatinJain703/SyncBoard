@@ -66,17 +66,17 @@ export class RoomManager {
                     const Room = await RoomModel.findById(message.Roomid);
                     Room?.chat.push({
                         userid: user.userid,
+                        username: user.username,
                         message: message.chat
                     })
 
                     this.Users.forEach(u => {
-                        if (u.Room === message.Roomid) {
+                        if (u.Room === message.Roomid&&u.socket!==socket) {
                             u.socket.send(JSON.stringify({
                                 type: CHAT,
-                                Roomid: message.Roomid,
-                                from: user.userid,
-                                chat: message.chat,
-                                timestamp: Date.now()
+                                userid: user.userid.toString(),
+                                username: user.username,
+                                chat: message.chat
                             }));
                         }
                     });
@@ -185,6 +185,12 @@ export class RoomManager {
         const temp = this.Users.find(u => u.userid === userid && u.socket === socket)
         if (temp) {
             return;
+        }
+       
+        const prev=this.Users.find(u=>u.userid===userid);
+        if(prev)
+        {
+            this.removeUser(prev.socket);
         }
 
         this.Users.push({
