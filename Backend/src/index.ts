@@ -5,6 +5,7 @@ import roomrouter from "./Routes/Room.js"
 import GetRoomsrouter from "./Routes/GetRooms.js"
 import GetEditorrouter from "./Routes/GetEditor.js"
 import tokenRoute from "./Routes/get-participant-token.js"
+import GetChatsRoute from "./Routes/GetChats.js"
 
 const app=express()
 import mongoose from "mongoose"
@@ -22,5 +23,7 @@ app.use("/auth",loginrouter);
 app.use("/",roomrouter);
 app.use("/",GetRoomsrouter);
 app.use("/",GetEditorrouter);
-app.use("/token",tokenRoute);
+app.use("/",tokenRoute);
+app.use("/",GetChatsRoute);
+
 app.listen(3000);

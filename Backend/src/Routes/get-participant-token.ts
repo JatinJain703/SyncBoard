@@ -8,7 +8,7 @@ const router = express.Router();
 const apiKey = LiveKitapiKey;
 const apiSecret = LiveKitsecret;
 
-router.get("/", async (req, res) => {
+router.get("/token", async (req, res) => {
   const { room, currentUserId} = req.query;
 
   if (!room || !currentUserId) {
