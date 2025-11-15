@@ -7,27 +7,80 @@ import VideoChat from "./VideoChat";
 import { MembersDropdown } from "./Members";
 import { ShareDropdown } from "./Share";
 import { Header } from "./Header";
+import { ChatContainer } from "./ChatContainer";
+import axios from "axios";
 
 interface member {
   userid: string;
   username: string;
 }
 
+interface ChatMessage {
+  userid: string;
+  username: string;
+  message: string;
+}
+
 export function Canvas() {
   const navigate = useNavigate();
-  const { Roomname, Roomid } = useParams();
+  const { Roomid } = useParams();
   const [_Host, setHost] = useState(null);
   const [Members, setMembers] = useState<member[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [socket, setsocket] = useState<WebSocket | null>(null);
   const [editor, seteditor] = useState<Editor | null>(null);
   const [isApplyingRemoteChanges, setIsApplyingRemoteChanges] = useState(false);
-
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   // Handle editor mount
+
+   async function fetchchats() {
+        try {
+            const response = await axios.get("https://syncboard-66a9.onrender.com/GetChats", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                params: {
+                    Roomid,
+                },
+            });
+            return response.data.chat || [];
+        } catch (err) {
+            console.error("Failed to fetch chats");
+            return [];
+        }
+    }
+
+    useEffect(() => {
+        const loadChats = async () => {
+            const data = await fetchchats();
+            setMessages(data);
+        };
+        loadChats();
+    }, [Roomid]);
+    
   const handleEditorMount = useCallback((editorInstance: Editor) => {
     seteditor(editorInstance);
   }, []);
-
+  
+   const handleSendMessage = (message: string) => {
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        userid: currentUserId || "unknown",
+        username: "You",
+        message: message,
+      },
+    ]);
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "chat",
+          Roomid: Roomid,
+          chat: message,
+        })
+      );
+    }
+  };
   // Setup WebSocket
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -94,6 +147,18 @@ export function Canvas() {
           setIsApplyingRemoteChanges(false);
         }
       }
+
+       if (msg.type === "chat") {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            userid: msg.userid,
+            username: msg.username,
+            message: msg.chat,
+          },
+        ]);
+      }
+
     };
 
     ws.onerror = (error) => {
@@ -113,7 +178,7 @@ export function Canvas() {
       }
       ws.close();
     };
-  }, [Roomid, Roomname, navigate, editor, currentUserId]);
+  }, [Roomid, navigate, editor, currentUserId]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -130,7 +195,7 @@ export function Canvas() {
     };
   }, [socket, Roomid]);
 
-  return (
+ return (
     <div style={{ position: 'fixed', inset: 0 }}>
       <Header/>
       <Tldraw hideUi onMount={handleEditorMount}>
@@ -178,6 +243,12 @@ export function Canvas() {
         <MembersDropdown members={Members} />
         <ShareDropdown Roomid={Roomid!} />
       </div>
+
+      <ChatContainer
+        messages={messages}
+        currentUserId={currentUserId}
+        onSendMessage={handleSendMessage}
+      />
     </div>
   );
 }
