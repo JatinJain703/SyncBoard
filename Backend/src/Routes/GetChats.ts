@@ -4,7 +4,7 @@ import { RoomModel } from "../db.js";
 import { auth } from "../middlewares/auth.js";
 
 router.get("/GetChats", auth,async (req, res) => {
-    const Roomid=req.body.Roomid;
+    const Roomid=req.query.Roomid;
     try{
         const Room=await RoomModel.findById(Roomid);
         if(!Room)
