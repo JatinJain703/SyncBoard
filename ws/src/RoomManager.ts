@@ -1,6 +1,6 @@
 import type { ObjectId } from "mongoose";
 import WebSocket from "ws";
-import { CHAT, JOIN_ROOM, LEAVE_ROOM, SNAPSHOT, PATCH} from "./messages.js";
+import { CHAT, JOIN_ROOM, LEAVE_ROOM, SNAPSHOT, PATCH } from "./messages.js";
 import { RoomModel } from "./db.js";
 interface User {
     socket: WebSocket,
@@ -27,7 +27,7 @@ export class RoomManager {
                 const Room = await RoomModel.findById(message.Roomid);
                 if (Room) {
                     user.Room = message.Roomid;
-                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "",user.userid,"new-user");
+                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "", user.userid, "new-user");
                 }
 
                 else {
@@ -43,7 +43,7 @@ export class RoomManager {
                 this.removeUser(socket);
                 const Room = await RoomModel.findById(message.Roomid);
                 if (Room) {
-                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "",user.userid,"user-left");
+                    this.broadcastMembers(message.Roomid, Room?.hostid?.toString() || "", user.userid, "user-left");
                 }
                 else {
                     user.socket.send(JSON.stringify({ message: "Room does not exist" }))
@@ -71,7 +71,7 @@ export class RoomManager {
                     })
 
                     this.Users.forEach(u => {
-                        if (u.Room === message.Roomid&&u.socket!==socket) {
+                        if (u.Room === message.Roomid && u.socket !== socket) {
                             u.socket.send(JSON.stringify({
                                 type: CHAT,
                                 userid: user.userid.toString(),
@@ -105,22 +105,14 @@ export class RoomManager {
                     if (!Room) {
                         return;
                     }
-                    let snapshot = message.snapshot;
+                    let snapshot = typeof message.snapshot === "string"
+                        ? JSON.parse(message.snapshot)
+                        : message.snapshot;
 
-                    if (typeof snapshot === "string") {
-                        try {
-                            snapshot = JSON.parse(snapshot);
-                        } catch (err) {
-                            console.error("Invalid snapshot string:", err);
-                            return; // skip saving
-                        }
-                    }
-
-                    if (snapshot && typeof snapshot === "object") {
-                        Room.editorState = snapshot;
-                        await Room.save();
-                    }
-
+                        Room.editorState = snapshot;  
+                        await Room.save(); 
+                        console.log('✅ Snapshot saved - all fields preserved');
+                   
                 } catch (err) {
                     console.error("Error saving snapshot:", err);
                 }
@@ -149,33 +141,32 @@ export class RoomManager {
             }
         })
     }
-    private broadcastMembers(roomId: string, hostId: String,userId:ObjectId,msg:string) {
+    private broadcastMembers(roomId: string, hostId: String, userId: ObjectId, msg: string) {
         const members = this.Users
             .filter(u => u.Room === roomId)
             .map(u => ({
                 userid: u.userid.toString(),
-                username:u.username
+                username: u.username
             }));
-            const usersocket=this.Users.find(u=>u.userid===userId)?.socket;
+        const usersocket = this.Users.find(u => u.userid === userId)?.socket;
         this.Users.forEach(u => {
             if (u.Room === roomId) {
-                
-                 const personalizedMembers = members.map(m => ({
-                ...m,
-                username: m.userid === u.userid.toString() ? "You" : m.username
-            }));
+
+                const personalizedMembers = members.map(m => ({
+                    ...m,
+                    username: m.userid === u.userid.toString() ? "You" : m.username
+                }));
                 u.socket.send(JSON.stringify({
                     type: "MEMBERS",
                     Roomid: roomId,
                     host: hostId,
                     members: personalizedMembers
-                })); 
-                if(u.socket!==usersocket)
-                {
-                  u.socket.send(JSON.stringify({
-                    type:msg,
-                    userId:userId.toString()
-                  }))
+                }));
+                if (u.socket !== usersocket) {
+                    u.socket.send(JSON.stringify({
+                        type: msg,
+                        userId: userId.toString()
+                    }))
                 }
             }
         });
@@ -186,10 +177,9 @@ export class RoomManager {
         if (temp) {
             return;
         }
-       
-        const prev=this.Users.find(u=>u.userid===userid);
-        if(prev)
-        {
+
+        const prev = this.Users.find(u => u.userid === userid);
+        if (prev) {
             this.removeUser(prev.socket);
         }
 

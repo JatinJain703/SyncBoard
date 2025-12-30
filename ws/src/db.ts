@@ -23,7 +23,11 @@ const Room=new schema({
             message:String
         }
     ],
-    editorState:{type:Object,default:{}}
+    editorState: { type: schema.Types.Mixed, default: null },  
+}, {
+    strict: false,      
+    minimize: false,    
+    versionKey: false  
 })
 
 const UserModel=mongoose.model('User',User);
