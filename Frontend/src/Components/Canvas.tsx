@@ -9,6 +9,7 @@ import { ShareDropdown } from "./Share";
 import { Header } from "./Header";
 import { ChatContainer } from "./ChatContainer";
 import axios from "axios";
+import { useRef } from "react";
 
 interface member {
   userid: string;
@@ -31,38 +32,86 @@ export function Canvas() {
   const [editor, seteditor] = useState<Editor | null>(null);
   const [isApplyingRemoteChanges, setIsApplyingRemoteChanges] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  // Handle editor mount
+  const [snapshot, setSnapshot] = useState<any>(null);
+  const snapshotAppliedRef = useRef(false);
 
-   async function fetchchats() {
-        try {
-            const response = await axios.get("https://syncboard-66a9.onrender.com/GetChats", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-                params: {
-                    Roomid,
-                },
-            });
-            return response.data.chat || [];
-        } catch (err) {
-            console.error("Failed to fetch chats");
-            return [];
-        }
+
+  async function fetchchats() {
+    try {
+      const response = await axios.get("https://syncboard-66a9.onrender.com/GetChats", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        params: {
+          Roomid,
+        },
+      });
+      return response.data.chat || [];
+    } catch (err) {
+      console.error("Failed to fetch chats");
+      return [];
     }
+  }
 
-    useEffect(() => {
-        const loadChats = async () => {
-            const data = await fetchchats();
-            setMessages(data);
-        };
-        loadChats();
-    }, [Roomid]);
-    
+  async function fetchsnapshot() {
+    try {
+      const response = await axios.post(
+        "https://syncboard-66a9.onrender.com/GetEditor",
+        { Roomid },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      return response.data.snapshot || null;
+    } catch (err) {
+      console.error("Failed to fetch snapshot");
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      const chats = await fetchchats();
+      const snap = await fetchsnapshot();
+      setMessages(chats);
+      setSnapshot(snap);
+    };
+    loadData();
+  }, [Roomid]);
+
   const handleEditorMount = useCallback((editorInstance: Editor) => {
     seteditor(editorInstance);
   }, []);
-  
-   const handleSendMessage = (message: string) => {
+
+  useEffect(() => {
+    if (!editor) return;
+    if (!snapshot) return;
+    if (snapshotAppliedRef.current) return;
+
+    try {
+      console.log("📥 Applying snapshot to editor");
+
+      setIsApplyingRemoteChanges(true);
+
+      editor.loadSnapshot(snapshot);
+
+      snapshotAppliedRef.current = true;
+
+      
+      setTimeout(() => {
+        setIsApplyingRemoteChanges(false);
+      }, 50);
+
+      console.log("✅ Snapshot applied successfully");
+    } catch (err) {
+      console.error("❌ Failed to apply snapshot:", err);
+      setIsApplyingRemoteChanges(false);
+    }
+  }, [editor, snapshot]);
+
+  const handleSendMessage = (message: string) => {
     setMessages((prevMessages) => [
       ...prevMessages,
       {
@@ -148,7 +197,7 @@ export function Canvas() {
         }
       }
 
-       if (msg.type === "chat") {
+      if (msg.type === "chat") {
         setMessages((prevMessages) => [
           ...prevMessages,
           {
@@ -195,9 +244,9 @@ export function Canvas() {
     };
   }, [socket, Roomid]);
 
- return (
+  return (
     <div style={{ position: 'fixed', inset: 0 }}>
-      <Header/>
+      <Header />
       <Tldraw hideUi onMount={handleEditorMount}>
         {editor && socket && (
           <CustomToolBar
@@ -229,7 +278,7 @@ export function Canvas() {
           />
         )}
       </div>
-      
+
       <div
         style={{
           position: "absolute",
