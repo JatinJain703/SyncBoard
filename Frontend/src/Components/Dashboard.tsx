@@ -5,12 +5,14 @@ import "react-toastify/dist/ReactToastify.css"
 import { CreateRoom } from "./CreateRoom"
 import { useNavigate } from "react-router-dom"
 import { Plus, LogOut } from "lucide-react"
+import { TailSpin } from "react-loader-spinner";
 
 export function Dashboard() {
   const [rooms, setRooms] = useState<{ Roomid: string; Roomname: string }[]>([])
   const [showCreate, setShowCreate] = useState(false)
   const navigate = useNavigate()
-
+  const [loading, setloading] = useState(true);
+  
   async function fetchData() {
     try {
       const response = await axios.get("https://syncboard-66a9.onrender.com/GetRooms", {
@@ -53,7 +55,11 @@ export function Dashboard() {
   }
 
   useEffect(() => {
-    fetchData()
+    async function fetchRooms() {
+      await fetchData();
+      setloading(false);
+    }
+    fetchRooms();
   }, [])
 
   return (
@@ -101,7 +107,21 @@ export function Dashboard() {
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Your Rooms</h2>
 
            
-            {rooms.length > 0 ? (
+           {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <TailSpin
+                  visible={true}
+                  height="80"
+                  width="80"
+                  color="#2563eb"
+                  ariaLabel="tail-spin-loading"
+                  radius="1"
+                  wrapperStyle={{}}
+                  wrapperClass=""
+                />
+                <p className="mt-4 text-slate-500 dark:text-slate-400 font-medium italic">Loading your workspace...</p>
+              </div>
+            ) : rooms.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {rooms.map((room) => (
                   <button
